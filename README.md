@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bodygraph Manager
+
+A professional gym management web application built with Next.js (App Router), TypeScript, Tailwind CSS, and Prisma ORM on SQLite.
+
+## Features
+
+- Role-based access for Admin, Receptionist, Trainer, and Member, enforced server-side on every page and Server Action
+- Admin dashboard with real database-backed stats and charts (revenue, attendance, membership growth/status, trainer performance, peak hours)
+- Member, trainer, membership plan, and membership management with search/filter/sort/pagination
+- Attendance tracking with QR code check-in (manual entry, keyboard-wedge scanners, and browser-native camera scanning)
+- Payments with printable/PDF receipts (browser print), invoice numbers, and status tracking
+- Workout plans, an exercise library, diet plans, and progress tracking with charts and photos
+- Internal notifications (including admin announcements) and low-stock inventory management
+- Reports with CSV export, a central user directory, branch settings, and an audit log
+- Light/dark theme, responsive layout, toasts, and a small reusable UI kit
 
 ## Getting Started
 
-First, run the development server:
+1. Install dependencies:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+   ```bash
+   npm install
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Copy the environment template and adjust as needed (the defaults work out of the box for local development):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+   ```bash
+   cp .env.example .env
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Apply the database schema and seed demo data:
 
-## Learn More
+   ```bash
+   npm run db:migrate
+   npm run db:seed
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. Start the dev server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+## Demo logins (seed data)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@bodygraph.dev` | `Admin@123` |
+| Receptionist | `reception@bodygraph.dev` | `Reception@123` |
+| Trainer | `trainer@bodygraph.dev` | `Trainer@123` |
+| Trainer 2 | `trainer2@bodygraph.dev` | `Trainer@123` |
+| Member | `member@bodygraph.dev` | `Member@123` |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Re-run `npm run db:seed` at any time to reset demo data back to this baseline (it wipes and reseeds all tables).
+
+## Useful scripts
+
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run db:migrate` | Create/apply a Prisma migration |
+| `npm run db:seed` | Reset and reseed the database |
+| `npm run db:studio` | Open Prisma Studio |
+| `npm run db:reset` | Drop and recreate the database from migrations |
+
+## Tech stack
+
+- **Next.js 16** (App Router, Server Components, Server Actions, Route Handlers)
+- **Prisma ORM 7** with the `@prisma/adapter-better-sqlite3` driver adapter over **SQLite**
+- **Tailwind CSS v4** for styling, with light/dark theme tokens in `app/globals.css`
+- **Zod** for validation, **Recharts** for charts, **lucide-react** for icons, **qrcode** for QR generation
+
+See [AGENTS.md](./AGENTS.md) for notes on this project's Next.js version and where to find its docs.
