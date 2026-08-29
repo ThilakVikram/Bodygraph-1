@@ -387,11 +387,7 @@ async function main() {
 
   console.log("Seed complete.\n");
   console.log("Demo logins:");
-  console.log("  Admin:        admin@bodygraph.dev / Admin@123");
-  console.log("  Receptionist: reception@bodygraph.dev / Reception@123");
-  console.log("  Trainer:      trainer@bodygraph.dev / Trainer@123");
-  console.log("  Trainer 2:    trainer2@bodygraph.dev / Trainer@123");
-  console.log("  Member:       member@bodygraph.dev / Member@123");
+  console.log("  Admin:        admin@bodygraph.in / Admin@123");
 }
 
 main()
