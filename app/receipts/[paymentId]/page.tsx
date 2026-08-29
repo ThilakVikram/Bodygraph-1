@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
 import { APP_NAME } from "@/lib/constants";
+import { getCurrency } from "@/lib/settings";
 import { formatCurrency, formatDate, formatDateTime, titleCase } from "@/lib/utils";
 import { PrintButton } from "./print-button";
 
@@ -14,6 +15,7 @@ export default async function ReceiptPage({
 }) {
   const user = await requireUser();
   const { paymentId } = await params;
+  const currency = await getCurrency();
 
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
@@ -97,7 +99,7 @@ export default async function ReceiptPage({
                   </span>
                 )}
               </td>
-              <td className="py-3 text-right text-foreground">{formatCurrency(payment.amount)}</td>
+              <td className="py-3 text-right text-foreground">{formatCurrency(payment.amount, currency)}</td>
             </tr>
           </tbody>
         </table>
@@ -106,7 +108,7 @@ export default async function ReceiptPage({
           <div className="w-48">
             <div className="flex justify-between border-t border-border pt-3 text-base font-semibold text-foreground">
               <span>Total</span>
-              <span>{formatCurrency(payment.amount)}</span>
+              <span>{formatCurrency(payment.amount, currency)}</span>
             </div>
           </div>
         </div>

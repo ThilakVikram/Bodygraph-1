@@ -4,7 +4,8 @@ import { ArrowLeft, CreditCard } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/dal";
 import { syncExpiredMemberships } from "@/lib/actions/memberships";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
+import { getCurrency } from "@/lib/settings";
+import { computePaymentStatus, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -25,7 +26,7 @@ export default async function MembershipDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireRole("ADMIN", "RECEPTIONIST");
+  const user = await requireRole("ADMIN", "RECEPTIONIST");
   await syncExpiredMemberships();
 
   const { id } = await params;
@@ -36,13 +37,16 @@ export default async function MembershipDetailPage({
   });
   if (!membership) notFound();
 
-  const [payments, activePlansRaw] = await Promise.all([
+  const [payments, activePlansRaw, currency] = await Promise.all([
     prisma.payment.findMany({
       where: { membershipId: membership.id },
       orderBy: { paymentDate: "desc" },
     }),
     prisma.membershipPlan.findMany({ where: { isActive: true } }),
+    getCurrency(),
   ]);
+
+  const paymentStatus = computePaymentStatus(membership.amount, payments);
 
   const planOptionsRaw = activePlansRaw.some((p) => p.id === membership.planId)
     ? activePlansRaw
@@ -71,6 +75,8 @@ export default async function MembershipDetailPage({
             status={membership.status}
             currentPlanId={membership.planId}
             plans={planOptions}
+            currency={currency}
+            isAdmin={user.role === "ADMIN"}
           />
         }
       />
@@ -112,7 +118,15 @@ export default async function MembershipDetailPage({
                 <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Amount
                 </dt>
-                <dd className="mt-1 text-sm text-foreground">{formatCurrency(membership.amount)}</dd>
+                <dd className="mt-1 text-sm text-foreground">{formatCurrency(membership.amount, currency)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Payment Status
+                </dt>
+                <dd className="mt-1">
+                  <StatusBadge status={paymentStatus} />
+                </dd>
               </div>
               <div>
                 <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -181,7 +195,7 @@ export default async function MembershipDetailPage({
                     <TableCell>{payment.invoiceNumber}</TableCell>
                     <TableCell>{formatDate(payment.paymentDate)}</TableCell>
                     <TableCell>{payment.method}</TableCell>
-                    <TableCell>{formatCurrency(payment.amount)}</TableCell>
+                    <TableCell>{formatCurrency(payment.amount, currency)}</TableCell>
                     <TableCell>
                       <StatusBadge status={payment.status} />
                     </TableCell>

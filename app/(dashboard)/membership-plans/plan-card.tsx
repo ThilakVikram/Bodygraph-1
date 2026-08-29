@@ -19,10 +19,12 @@ export function PlanCard({
   plan,
   isAdmin,
   hasMemberships,
+  currency,
 }: {
   plan: PlanFormValues;
   isAdmin: boolean;
   hasMemberships: boolean;
+  currency: string;
 }) {
   const { toast } = useToast();
   const [togglePending, startToggle] = useTransition();
@@ -69,7 +71,7 @@ export function PlanCard({
       <CardContent className="flex-1 space-y-4">
         <div className="flex items-baseline gap-1">
           <span className="text-2xl font-semibold tracking-tight text-foreground">
-            {formatCurrency(plan.price)}
+            {formatCurrency(plan.price, currency)}
           </span>
           <span className="text-sm text-muted-foreground">
             / {plan.durationDays} day{plan.durationDays === 1 ? "" : "s"}

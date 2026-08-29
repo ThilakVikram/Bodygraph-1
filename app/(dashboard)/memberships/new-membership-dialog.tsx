@@ -10,6 +10,7 @@ import { Dialog, type DialogHandle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Select } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/utils";
@@ -21,15 +22,18 @@ export function NewMembershipDialog({
   members,
   plans,
   defaultMemberId,
+  currency,
 }: {
   members: MemberOption[];
   plans: PlanOption[];
   defaultMemberId?: string;
+  currency: string;
 }) {
   const dialogRef = useRef<DialogHandle>(null);
   const [state, formAction, pending] = useActionState(createMembershipAction, initialActionState);
   useActionToast(state);
 
+  const [memberId, setMemberId] = useState(defaultMemberId ?? "");
   const [planId, setPlanId] = useState(plans[0]?.id ?? "");
   const selectedPlan = plans.find((p) => p.id === planId);
   const today = new Date().toISOString().slice(0, 10);
@@ -50,19 +54,18 @@ export function NewMembershipDialog({
       >
         <form action={formAction} className="space-y-4">
           <Field label="Member" htmlFor="memberId" required error={state.fieldErrors?.memberId}>
-            <Select
-              id="memberId"
+            <Combobox
               name="memberId"
-              defaultValue={defaultMemberId ?? ""}
+              value={memberId}
+              onChange={setMemberId}
+              placeholder="Search by name or member code…"
               invalid={!!state.fieldErrors?.memberId}
-            >
-              <option value="">Select a member…</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({m.memberCode})
-                </option>
-              ))}
-            </Select>
+              options={members.map((m) => ({
+                value: m.id,
+                label: m.name,
+                sublabel: m.memberCode,
+              }))}
+            />
           </Field>
 
           <Field label="Plan" htmlFor="planId" required error={state.fieldErrors?.planId}>
@@ -76,7 +79,7 @@ export function NewMembershipDialog({
               <option value="">Select a plan…</option>
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} — {formatCurrency(p.price)} / {p.durationDays}d
+                  {p.name} — {formatCurrency(p.price, currency)} / {p.durationDays}d
                 </option>
               ))}
             </Select>

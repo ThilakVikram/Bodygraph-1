@@ -8,10 +8,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { formatCurrency, formatTime } from "@/lib/utils";
 import { getDashboardStats, getAttendanceTrend } from "@/lib/analytics";
+import { getCurrency } from "@/lib/settings";
 import { prisma } from "@/lib/prisma";
 
 export async function ReceptionistDashboard({ userName }: { userName: string }) {
-  const [stats, attendance, recentCheckIns] = await Promise.all([
+  const [stats, attendance, recentCheckIns, currency] = await Promise.all([
     getDashboardStats(),
     getAttendanceTrend(),
     prisma.attendance.findMany({
@@ -19,6 +20,7 @@ export async function ReceptionistDashboard({ userName }: { userName: string }) 
       take: 6,
       include: { member: { include: { user: { select: { name: true, avatarUrl: true } } } } },
     }),
+    getCurrency(),
   ]);
 
   return (
@@ -46,7 +48,7 @@ export async function ReceptionistDashboard({ userName }: { userName: string }) 
         <StatCard label="Expiring Soon" value={stats.expiringMemberships} icon={AlertTriangle} tone="warning" />
         <StatCard
           label="Pending Payments"
-          value={`${stats.pendingPayments} (${formatCurrency(stats.pendingPaymentsAmount)})`}
+          value={`${stats.pendingPayments} (${formatCurrency(stats.pendingPaymentsAmount, currency)})`}
           icon={Clock}
           tone="warning"
         />

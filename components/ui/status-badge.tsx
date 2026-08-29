@@ -9,11 +9,13 @@ const STATUS_VARIANTS: Record<string, BadgeVariant> = {
 
   PENDING: "warning",
   PROCESSING: "warning",
+  PARTIAL: "warning",
 
   EXPIRED: "destructive",
   CANCELLED: "destructive",
   FAILED: "destructive",
   INACTIVE: "destructive",
+  UNPAID: "destructive",
 
   REFUNDED: "info",
   DRAFT: "neutral",

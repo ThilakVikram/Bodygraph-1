@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireMemberProfile } from "@/lib/auth/dal";
 import { syncExpiredMemberships } from "@/lib/actions/memberships";
 import { MEMBERSHIP_EXPIRY_WINDOW_DAYS } from "@/lib/constants";
+import { getCurrency } from "@/lib/settings";
 import { cn, daysBetween, formatCurrency, formatDate } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,11 +24,14 @@ export default async function MyMembershipPage() {
   // Keep this member's membership statuses accurate before reading them.
   await syncExpiredMemberships();
 
-  const memberships = await prisma.membership.findMany({
-    where: { memberId: member.id },
-    include: { plan: true },
-    orderBy: { startDate: "desc" },
-  });
+  const [memberships, currency] = await Promise.all([
+    prisma.membership.findMany({
+      where: { memberId: member.id },
+      include: { plan: true },
+      orderBy: { startDate: "desc" },
+    }),
+    getCurrency(),
+  ]);
 
   const current =
     memberships.find((m) => m.status === "ACTIVE") ??
@@ -90,7 +94,7 @@ export default async function MyMembershipPage() {
                   <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Amount paid
                   </dt>
-                  <dd className="mt-1 text-sm text-foreground">{formatCurrency(current.amount)}</dd>
+                  <dd className="mt-1 text-sm text-foreground">{formatCurrency(current.amount, currency)}</dd>
                 </div>
                 <div>
                   <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -142,7 +146,7 @@ export default async function MyMembershipPage() {
                         <TableCell>{m.plan.name}</TableCell>
                         <TableCell>{formatDate(m.startDate)}</TableCell>
                         <TableCell>{formatDate(m.endDate)}</TableCell>
-                        <TableCell>{formatCurrency(m.amount)}</TableCell>
+                        <TableCell>{formatCurrency(m.amount, currency)}</TableCell>
                         <TableCell>
                           <StatusBadge status={m.status} />
                         </TableCell>

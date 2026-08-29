@@ -72,10 +72,12 @@ export function RevenueSection({
   series,
   detail,
   exportHref,
+  currency,
 }: {
   series: { month: string; revenue: number }[];
   detail: Awaited<ReturnType<typeof getRevenueDetail>>;
   exportHref: string;
+  currency: string;
 }) {
   const totalInRange = detail.reduce((sum, p) => sum + p.amount, 0);
   const rows = detail.slice(0, DETAIL_ROW_LIMIT);
@@ -83,13 +85,13 @@ export function RevenueSection({
   return (
     <div className="space-y-6">
       <ChartCard title="Monthly revenue" description="Paid revenue, last 6 months.">
-        <RevenueChart data={series} />
+        <RevenueChart data={series} currency={currency} />
       </ChartCard>
 
       <div>
         <SectionHeader
           title="Payments (paid)"
-          description={`Total collected in range: ${formatCurrency(totalInRange)}`}
+          description={`Total collected in range: ${formatCurrency(totalInRange, currency)}`}
           exportHref={exportHref}
         />
         {rows.length === 0 ? (
@@ -113,7 +115,7 @@ export function RevenueSection({
                     <TableCell className="font-mono text-xs">{p.invoiceNumber}</TableCell>
                     <TableCell>{p.member.user.name}</TableCell>
                     <TableCell>{titleCase(p.method)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(p.amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(p.amount, currency)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -379,10 +381,12 @@ export function PaymentsSection({
   breakdown,
   detail,
   exportHref,
+  currency,
 }: {
   breakdown: PaymentsBreakdown;
   detail: Awaited<ReturnType<typeof getPaymentsDetail>>;
   exportHref: string;
+  currency: string;
 }) {
   const rows = detail.slice(0, DETAIL_ROW_LIMIT);
 
@@ -392,7 +396,9 @@ export function PaymentsSection({
         <Card>
           <CardHeader>
             <CardTitle>By status</CardTitle>
-            <CardDescription>Total collected: {formatCurrency(breakdown.totalCollected)}</CardDescription>
+            <CardDescription>
+              Total collected: {formatCurrency(breakdown.totalCollected, currency)}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {breakdown.byStatus.length === 0 ? (
@@ -402,7 +408,7 @@ export function PaymentsSection({
                 <div key={s.status} className="flex items-center justify-between text-sm">
                   <StatusBadge status={s.status} />
                   <span className="text-muted-foreground">
-                    {s.count} · {formatCurrency(s.amount)}
+                    {s.count} · {formatCurrency(s.amount, currency)}
                   </span>
                 </div>
               ))
@@ -422,7 +428,7 @@ export function PaymentsSection({
                 <div key={m.method} className="flex items-center justify-between text-sm">
                   <span className="font-medium text-foreground">{titleCase(m.method)}</span>
                   <span className="text-muted-foreground">
-                    {m.count} · {formatCurrency(m.amount)}
+                    {m.count} · {formatCurrency(m.amount, currency)}
                   </span>
                 </div>
               ))
@@ -462,7 +468,7 @@ export function PaymentsSection({
                     <TableCell>
                       <StatusBadge status={p.status} />
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(p.amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(p.amount, currency)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

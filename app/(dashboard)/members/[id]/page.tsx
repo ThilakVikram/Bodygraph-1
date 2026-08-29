@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
 import { qrTokenToDataUrl } from "@/lib/qr";
+import { getCurrency } from "@/lib/settings";
 import { formatCurrency, formatDate, formatDateTime, titleCase } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,7 +41,7 @@ export default async function MemberDetailPage({
   if (!member) notFound();
   if (ownTrainerId && member.trainerId !== ownTrainerId) redirect("/forbidden");
 
-  const [memberships, payments, attendances, workoutPlans, dietPlans, progressRecords, qrDataUrl] =
+  const [memberships, payments, attendances, workoutPlans, dietPlans, progressRecords, qrDataUrl, currency] =
     await Promise.all([
       prisma.membership.findMany({
         where: { memberId: member.id },
@@ -74,6 +75,7 @@ export default async function MemberDetailPage({
         take: 5,
       }),
       qrTokenToDataUrl(member.qrToken),
+      getCurrency(),
     ]);
 
   const overviewTab = (
@@ -177,7 +179,7 @@ export default async function MemberDetailPage({
               <TableCell>
                 {formatDate(m.startDate)} – {formatDate(m.endDate)}
               </TableCell>
-              <TableCell>{formatCurrency(m.amount)}</TableCell>
+              <TableCell>{formatCurrency(m.amount, currency)}</TableCell>
               <TableCell>
                 <StatusBadge status={m.status} />
               </TableCell>
@@ -209,7 +211,7 @@ export default async function MemberDetailPage({
             <TableRow key={p.id}>
               <TableCell className="font-mono text-xs">{p.invoiceNumber}</TableCell>
               <TableCell>{formatDate(p.paymentDate)}</TableCell>
-              <TableCell>{formatCurrency(p.amount)}</TableCell>
+              <TableCell>{formatCurrency(p.amount, currency)}</TableCell>
               <TableCell>{titleCase(p.method)}</TableCell>
               <TableCell>
                 <StatusBadge status={p.status} />

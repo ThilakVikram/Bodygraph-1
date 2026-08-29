@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Apple, Plus } from "lucide-react";
 import { createDietPlanAction } from "@/lib/actions/diets";
 import { initialActionState } from "@/lib/actions/types";
@@ -12,6 +12,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Pagination } from "@/components/ui/pagination";
 import { SearchInput } from "@/components/ui/search-input";
@@ -131,6 +132,7 @@ function NewPlanDialog({
 }) {
   const [state, formAction, pending] = useActionState(createDietPlanAction, initialActionState);
   useActionToast(state);
+  const [memberId, setMemberId] = useState("");
 
   return (
     <Dialog ref={ref} title="New diet plan" description="Assign a nutrition program to a member.">
@@ -140,16 +142,14 @@ function NewPlanDialog({
         </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Member" htmlFor="memberId" required error={state.fieldErrors?.memberId}>
-            <Select id="memberId" name="memberId" defaultValue="" invalid={!!state.fieldErrors?.memberId}>
-              <option value="" disabled>
-                Select member
-              </option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </Select>
+            <Combobox
+              name="memberId"
+              value={memberId}
+              onChange={setMemberId}
+              placeholder="Search member…"
+              invalid={!!state.fieldErrors?.memberId}
+              options={members.map((m) => ({ value: m.id, label: m.name }))}
+            />
           </Field>
           {isAdmin && (
             <Field label="Trainer" htmlFor="trainerId" required error={state.fieldErrors?.trainerId}>

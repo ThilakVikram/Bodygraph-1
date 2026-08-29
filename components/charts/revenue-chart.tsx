@@ -11,7 +11,13 @@ const TOOLTIP_STYLE = {
   fontSize: 12,
 };
 
-export function RevenueChart({ data }: { data: { month: string; revenue: number }[] }) {
+export function RevenueChart({
+  data,
+  currency = "USD",
+}: {
+  data: { month: string; revenue: number }[];
+  currency?: string;
+}) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data} margin={{ left: 4, right: 4, top: 4, bottom: 0 }}>
@@ -35,9 +41,18 @@ export function RevenueChart({ data }: { data: { month: string; revenue: number 
           tickLine={false}
           axisLine={false}
           width={56}
-          tickFormatter={(v: number) => `$${v}`}
+          tickFormatter={(v: number) =>
+            new Intl.NumberFormat(undefined, {
+              style: "currency",
+              currency,
+              maximumFractionDigits: 0,
+            }).format(v)
+          }
         />
-        <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={TOOLTIP_STYLE} />
+        <Tooltip
+          formatter={(value) => formatCurrency(Number(value), currency)}
+          contentStyle={TOOLTIP_STYLE}
+        />
         <Area
           type="monotone"
           dataKey="revenue"

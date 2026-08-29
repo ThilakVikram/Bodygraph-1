@@ -1,7 +1,21 @@
 export const APP_NAME = "Bodygraph Manager";
 
+/** Fallback currency used until an AppSetting row exists. See lib/settings.ts. */
 export const CURRENCY = "USD";
 export const CURRENCY_LOCALE = "en-US";
+
+export const SUPPORTED_CURRENCIES = [
+  { code: "USD", label: "US Dollar" },
+  { code: "EUR", label: "Euro" },
+  { code: "GBP", label: "British Pound" },
+  { code: "INR", label: "Indian Rupee" },
+  { code: "AUD", label: "Australian Dollar" },
+  { code: "CAD", label: "Canadian Dollar" },
+  { code: "AED", label: "UAE Dirham" },
+  { code: "SGD", label: "Singapore Dollar" },
+  { code: "JPY", label: "Japanese Yen" },
+  { code: "ZAR", label: "South African Rand" },
+] as const;
 
 export const DEFAULT_PAGE_SIZE = 10;
 

@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { buttonVariants } from "@/components/ui/button";
 import { parsePagination, getParam, type SearchParams } from "@/lib/pagination";
+import { getCurrency } from "@/lib/settings";
 import { formatCurrency, formatDate, titleCase } from "@/lib/utils";
 import { PAYMENT_METHODS, PAYMENT_STATUSES } from "@/lib/constants";
 import {
@@ -40,7 +41,7 @@ export default async function PaymentsPage({
     const member = await prisma.member.findUnique({ where: { userId: user.id } });
     if (!member) redirect("/forbidden");
 
-    const [payments, total] = await Promise.all([
+    const [payments, total, currency] = await Promise.all([
       prisma.payment.findMany({
         where: { memberId: member.id },
         include: { membership: { include: { plan: true } } },
@@ -49,6 +50,7 @@ export default async function PaymentsPage({
         take,
       }),
       prisma.payment.count({ where: { memberId: member.id } }),
+      getCurrency(),
     ]);
 
     return (
@@ -77,7 +79,7 @@ export default async function PaymentsPage({
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.invoiceNumber}</TableCell>
                   <TableCell>{p.membership?.plan.name ?? "—"}</TableCell>
-                  <TableCell>{formatCurrency(p.amount)}</TableCell>
+                  <TableCell>{formatCurrency(p.amount, currency)}</TableCell>
                   <TableCell>{titleCase(p.method)}</TableCell>
                   <TableCell>
                     <StatusBadge status={p.status} />
@@ -132,13 +134,18 @@ export default async function PaymentsPage({
   if (deepLinkMemberId) where.memberId = deepLinkMemberId;
   if (deepLinkMembershipId) where.membershipId = deepLinkMembershipId;
   if (q) {
-    where.member = {
-      OR: [
-        { memberCode: { contains: q } },
-        { user: { name: { contains: q } } },
-        { user: { email: { contains: q } } },
-      ],
-    };
+    where.OR = [
+      { invoiceNumber: { contains: q } },
+      {
+        member: {
+          OR: [
+            { memberCode: { contains: q } },
+            { user: { name: { contains: q } } },
+            { user: { email: { contains: q } } },
+          ],
+        },
+      },
+    ];
   }
 
   let dialogDefaultMemberId = deepLinkMemberId;
@@ -152,7 +159,7 @@ export default async function PaymentsPage({
     dialogDefaultMemberId = membership?.memberId;
   }
 
-  const [payments, total, allMembers, initialMembershipRows] = await Promise.all([
+  const [payments, total, allMembers, initialMembershipRows, currency] = await Promise.all([
     prisma.payment.findMany({
       where,
       include: {
@@ -175,6 +182,7 @@ export default async function PaymentsPage({
           orderBy: { startDate: "desc" },
         })
       : Promise.resolve([]),
+    getCurrency(),
   ]);
 
   const memberOptions: MemberOption[] = allMembers.map((m) => ({
@@ -190,6 +198,7 @@ export default async function PaymentsPage({
     status: m.status,
     startDate: m.startDate.toISOString(),
     endDate: m.endDate.toISOString(),
+    amount: m.amount,
   }));
 
   return (
@@ -240,7 +249,7 @@ export default async function PaymentsPage({
                   <div className="text-xs text-muted-foreground">{p.member.memberCode}</div>
                 </TableCell>
                 <TableCell>{p.membership?.plan.name ?? "—"}</TableCell>
-                <TableCell>{formatCurrency(p.amount)}</TableCell>
+                <TableCell>{formatCurrency(p.amount, currency)}</TableCell>
                 <TableCell>{titleCase(p.method)}</TableCell>
                 <TableCell>
                   <StatusBadge status={p.status} />

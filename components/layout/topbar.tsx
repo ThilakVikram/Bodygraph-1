@@ -66,11 +66,16 @@ export function Topbar({
           >
             <UserIcon className="h-4 w-4" /> Account
           </Link>
-          <form action={logoutAction}>
-            <MenuItem type="submit" destructive>
-              <LogOut className="h-4 w-4" /> Log out
-            </MenuItem>
-          </form>
+          {/*
+            A plain onClick, not a <form action={logoutAction}> submit button:
+            Menu closes (and unmounts its children) on any click inside it,
+            which races with and cancels the browser's native form-submit
+            default action before it fires. Calling the server action
+            directly from the click handler sidesteps that entirely.
+          */}
+          <MenuItem destructive onClick={() => logoutAction()}>
+            <LogOut className="h-4 w-4" /> Log out
+          </MenuItem>
         </Menu>
       </div>
     </header>

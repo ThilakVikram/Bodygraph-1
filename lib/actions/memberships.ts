@@ -60,15 +60,23 @@ export async function createMembershipAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const [member, plan] = await Promise.all([
+  const [member, plan, existingActive] = await Promise.all([
     prisma.member.findUnique({
       where: { id: parsed.data.memberId },
       include: { user: true },
     }),
     prisma.membershipPlan.findUnique({ where: { id: parsed.data.planId } }),
+    prisma.membership.findFirst({
+      where: { memberId: parsed.data.memberId, status: { in: ["ACTIVE", "PENDING"] } },
+    }),
   ]);
   if (!member) return { error: "Member not found." };
   if (!plan) return { error: "Membership plan not found." };
+  if (existingActive) {
+    return {
+      error: "This member already has an active or pending membership. Use Renew instead of creating a new one.",
+    };
+  }
 
   const startDate = startOfDay(new Date(parsed.data.startDate));
   if (Number.isNaN(startDate.getTime())) {
@@ -219,4 +227,46 @@ export async function cancelMembershipAction(
   revalidateMembershipPaths(membership.id);
 
   return { success: true, message: "Membership cancelled." };
+}
+
+export async function deleteMembershipAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireRole("ADMIN");
+
+  const parsed = cancelMembershipSchema.safeParse({
+    membershipId: formData.get("membershipId"),
+  });
+  if (!parsed.success) {
+    return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const membership = await prisma.membership.findUnique({
+    where: { id: parsed.data.membershipId },
+  });
+  if (!membership) return { error: "Membership not found." };
+
+  const paymentCount = await prisma.payment.count({
+    where: { membershipId: membership.id },
+  });
+  if (paymentCount > 0) {
+    return {
+      error: "This membership has linked payments and can't be deleted. Cancel it instead.",
+    };
+  }
+
+  await prisma.membership.delete({ where: { id: membership.id } });
+
+  await writeAuditLog({
+    userId: user.id,
+    action: "DELETE",
+    entity: "Membership",
+    entityId: membership.id,
+    metadata: { memberId: membership.memberId, planId: membership.planId },
+  });
+
+  revalidateMembershipPaths();
+
+  return { success: true, message: "Membership deleted." };
 }

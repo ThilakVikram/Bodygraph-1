@@ -24,8 +24,8 @@ export function PaymentFilters() {
   return (
     <div className="flex flex-wrap items-end gap-3">
       <div className="flex flex-col">
-        <Label htmlFor="payment-search">Member</Label>
-        <SearchInput paramName="q" placeholder="Name, email, or code…" />
+        <Label htmlFor="payment-search">Search</Label>
+        <SearchInput paramName="q" placeholder="Invoice #, name, email, or code…" />
       </div>
       <div className="flex flex-col">
         <Label htmlFor="payment-status">Status</Label>

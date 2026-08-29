@@ -21,7 +21,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatDate } from "@/lib/utils";
@@ -226,20 +226,14 @@ function MemberPicker({ members, selectedMemberId }: { members: Option[]; select
   }
 
   return (
-    <Select
-      value={selectedMemberId ?? ""}
-      onChange={(e) => handleChange(e.target.value)}
-      className="w-64"
-    >
-      <option value="" disabled>
-        Select a member
-      </option>
-      {members.map((m) => (
-        <option key={m.id} value={m.id}>
-          {m.name}
-        </option>
-      ))}
-    </Select>
+    <div className="w-64">
+      <Combobox
+        value={selectedMemberId ?? ""}
+        onChange={handleChange}
+        placeholder="Search member…"
+        options={members.map((m) => ({ value: m.id, label: m.name }))}
+      />
+    </div>
   );
 }
 

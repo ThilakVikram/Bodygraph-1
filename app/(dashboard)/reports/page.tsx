@@ -20,6 +20,7 @@ import {
   getMembershipGrowthSeries,
   getTrainerPerformance,
 } from "@/lib/analytics";
+import { getCurrency } from "@/lib/settings";
 import { PageHeader } from "@/components/layout/page-header";
 import { Tabs } from "@/components/ui/tabs";
 import { DateRangeFilter } from "./date-range-filter";
@@ -66,6 +67,7 @@ export default async function ReportsPage({
     paymentsDetail,
     trainerPerformance,
     memberGrowthSeries,
+    currency,
   ] = await Promise.all([
     getMonthlyRevenueSeries(6),
     getRevenueDetail(range),
@@ -82,6 +84,7 @@ export default async function ReportsPage({
     getPaymentsDetail(range),
     getTrainerPerformance(),
     getMemberGrowthSeries(6),
+    getCurrency(),
   ]);
 
   return (
@@ -103,6 +106,7 @@ export default async function ReportsPage({
                 series={revenueSeries}
                 detail={revenueDetail}
                 exportHref={withQs("/api/reports/revenue")}
+                currency={currency}
               />
             ),
           },
@@ -150,6 +154,7 @@ export default async function ReportsPage({
                 breakdown={paymentsBreakdown}
                 detail={paymentsDetail}
                 exportHref={withQs("/api/reports/payments")}
+                currency={currency}
               />
             ),
           },

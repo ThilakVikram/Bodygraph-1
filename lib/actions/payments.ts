@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/dal";
 import { writeAuditLog } from "@/lib/audit";
 import { createNotification } from "@/lib/notifications";
+import { getCurrency } from "@/lib/settings";
 import { generateInvoiceNumber, formatCurrency } from "@/lib/utils";
 import {
   recordPaymentSchema,
@@ -72,11 +73,12 @@ export async function recordPaymentAction(
   });
 
   if (status === "PAID") {
+    const currency = await getCurrency();
     await createNotification({
       userId: member.userId,
       type: "PAYMENT_CONFIRMATION",
       title: "Payment received",
-      message: `Your payment of ${formatCurrency(amount)} has been recorded (Invoice ${payment.invoiceNumber}).`,
+      message: `Your payment of ${formatCurrency(amount, currency)} has been recorded (Invoice ${payment.invoiceNumber}).`,
       link: "/payments",
     });
   }
@@ -129,11 +131,12 @@ export async function updatePaymentStatusAction(
   });
 
   if (updated.status === "PAID") {
+    const currency = await getCurrency();
     await createNotification({
       userId: payment.member.userId,
       type: "PAYMENT_CONFIRMATION",
       title: "Payment received",
-      message: `Your payment of ${formatCurrency(payment.amount)} has been confirmed (Invoice ${payment.invoiceNumber}).`,
+      message: `Your payment of ${formatCurrency(payment.amount, currency)} has been confirmed (Invoice ${payment.invoiceNumber}).`,
       link: "/payments",
     });
   }

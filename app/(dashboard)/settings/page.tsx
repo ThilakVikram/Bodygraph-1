@@ -1,7 +1,8 @@
-import { Building2, Info } from "lucide-react";
+import { Building2, Info, Coins } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/dal";
 import { APP_NAME } from "@/lib/constants";
+import { getCurrency } from "@/lib/settings";
 import { formatDate } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -10,13 +11,15 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BranchFormDialog } from "./branch-form-dialog";
 import { BranchRowActions } from "./branch-row-actions";
+import { CurrencySettingsForm } from "./currency-settings-form";
 
 export default async function SettingsPage() {
   await requireRole("ADMIN");
 
-  const [branches, branchStats] = await Promise.all([
+  const [branches, branchStats, currency] = await Promise.all([
     prisma.branch.findMany({ orderBy: [{ isActive: "desc" }, { name: "asc" }] }),
     prisma.branch.aggregate({ _count: { _all: true } }),
+    getCurrency(),
   ]);
 
   const branchCounts = new Map<string, { trainers: number; members: number }>();
@@ -104,6 +107,18 @@ export default async function SettingsPage() {
       )}
 
       <Card className="mt-8 max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Coins className="h-4 w-4" /> Currency
+          </CardTitle>
+          <CardDescription>Applied to every payment, membership, and revenue amount.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CurrencySettingsForm currency={currency} />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6 max-w-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Info className="h-4 w-4" /> About

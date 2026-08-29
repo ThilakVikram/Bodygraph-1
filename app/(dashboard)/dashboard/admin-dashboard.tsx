@@ -7,6 +7,7 @@ import { GrowthChart } from "@/components/charts/growth-chart";
 import { StatusPieChart } from "@/components/charts/status-pie-chart";
 import { TrainerPerformanceChart } from "@/components/charts/trainer-performance-chart";
 import { PeakHoursChart } from "@/components/charts/peak-hours-chart";
+import { getCurrency } from "@/lib/settings";
 import { formatCurrency } from "@/lib/utils";
 import {
   getDashboardStats,
@@ -19,7 +20,7 @@ import {
 } from "@/lib/analytics";
 
 export async function AdminDashboard({ userName }: { userName: string }) {
-  const [stats, revenue, attendance, growth, statusBreakdown, trainerPerf, peakHours] =
+  const [stats, revenue, attendance, growth, statusBreakdown, trainerPerf, peakHours, currency] =
     await Promise.all([
       getDashboardStats(),
       getMonthlyRevenueSeries(),
@@ -28,6 +29,7 @@ export async function AdminDashboard({ userName }: { userName: string }) {
       getMembershipStatusBreakdown(),
       getTrainerPerformance(),
       getPeakHours(),
+      getCurrency(),
     ]);
 
   return (
@@ -47,10 +49,10 @@ export async function AdminDashboard({ userName }: { userName: string }) {
         <StatCard label="Active Memberships" value={stats.activeMemberships} icon={Layers} tone="info" />
         <StatCard label="Expiring Soon" value={stats.expiringMemberships} icon={AlertTriangle} tone="warning" />
         <StatCard label="Today's Attendance" value={stats.todayAttendance} icon={CalendarCheck} tone="info" />
-        <StatCard label="Monthly Revenue" value={formatCurrency(stats.monthlyRevenue)} icon={DollarSign} tone="success" />
+        <StatCard label="Monthly Revenue" value={formatCurrency(stats.monthlyRevenue, currency)} icon={DollarSign} tone="success" />
         <StatCard
           label="Pending Payments"
-          value={`${stats.pendingPayments} (${formatCurrency(stats.pendingPaymentsAmount)})`}
+          value={`${stats.pendingPayments} (${formatCurrency(stats.pendingPaymentsAmount, currency)})`}
           icon={Clock}
           tone="warning"
         />
@@ -59,7 +61,7 @@ export async function AdminDashboard({ userName }: { userName: string }) {
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ChartCard title="Monthly Revenue" description="Paid revenue over the last 6 months">
-          <RevenueChart data={revenue} />
+          <RevenueChart data={revenue} currency={currency} />
         </ChartCard>
         <ChartCard title="Attendance Trend" description="Check-ins over the last 14 days">
           <AttendanceChart data={attendance} />

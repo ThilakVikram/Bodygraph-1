@@ -6,10 +6,10 @@ export function cn(
   return inputs.filter(Boolean).join(" ");
 }
 
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number, currency: string = CURRENCY): string {
   return new Intl.NumberFormat(CURRENCY_LOCALE, {
     style: "currency",
-    currency: CURRENCY,
+    currency,
   }).format(amount);
 }
 
@@ -72,6 +72,20 @@ export function generateInvoiceNumber(): string {
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const rand = Math.floor(1000 + Math.random() * 9000);
   return `INV-${y}${m}-${rand}`;
+}
+
+export type PaymentStatusSummary = "PAID" | "PARTIAL" | "UNPAID";
+
+/** Aggregate payment status for a membership, derived from its linked payments. */
+export function computePaymentStatus(
+  amount: number,
+  payments: { amount: number; status: string }[],
+): PaymentStatusSummary {
+  const paidTotal = payments
+    .filter((p) => p.status === "PAID")
+    .reduce((sum, p) => sum + p.amount, 0);
+  if (paidTotal <= 0) return "UNPAID";
+  return paidTotal >= amount ? "PAID" : "PARTIAL";
 }
 
 export function generateMemberCode(): string {

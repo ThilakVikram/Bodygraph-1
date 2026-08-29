@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState } from "react";
-import Link from "next/link";
 import { Dumbbell } from "lucide-react";
 import { loginAction } from "@/lib/actions/auth";
 import { initialActionState } from "@/lib/actions/types";
@@ -59,14 +58,6 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
               invalid={!!state.fieldErrors?.password}
             />
           </Field>
-          <div className="flex justify-end">
-            <Link
-              href="/forgot-password"
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
           <Button type="submit" className="w-full" loading={pending}>
             Sign in
           </Button>

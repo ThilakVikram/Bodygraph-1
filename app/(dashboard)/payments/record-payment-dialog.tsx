@@ -5,6 +5,7 @@ import { Dialog, type DialogHandle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Select } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useActionToast } from "@/hooks/use-action-toast";
@@ -26,6 +27,7 @@ export type MembershipOption = {
   status: string;
   startDate: string;
   endDate: string;
+  amount: number;
 };
 
 export function RecordPaymentDialog({
@@ -45,7 +47,9 @@ export function RecordPaymentDialog({
   const [state, formAction, pending] = useActionState(recordPaymentAction, initialActionState);
   const [memberId, setMemberId] = useState(defaultMemberId ?? "");
   const [memberships, setMemberships] = useState<MembershipOption[]>(initialMemberships);
+  const [membershipId, setMembershipId] = useState(defaultMembershipId ?? "");
   const [loadingMemberships, startMembershipFetch] = useTransition();
+  const selectedMembership = memberships.find((m) => m.id === membershipId);
   const openedForDeepLink = useRef(false);
   const handledState = useRef(state);
   const today = new Date().toISOString().slice(0, 10);
@@ -69,6 +73,7 @@ export function RecordPaymentDialog({
 
   function handleMemberChange(nextId: string) {
     setMemberId(nextId);
+    setMembershipId("");
     if (!nextId) {
       setMemberships([]);
       return;
@@ -95,20 +100,18 @@ export function RecordPaymentDialog({
       >
         <form action={formAction} className="space-y-4">
           <Field label="Member" htmlFor="memberId" required error={state.fieldErrors?.memberId}>
-            <Select
-              id="memberId"
+            <Combobox
               name="memberId"
               value={memberId}
-              onChange={(e) => handleMemberChange(e.target.value)}
+              onChange={handleMemberChange}
+              placeholder="Search by name or member code…"
               invalid={!!state.fieldErrors?.memberId}
-            >
-              <option value="">Select a member…</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({m.memberCode})
-                </option>
-              ))}
-            </Select>
+              options={members.map((m) => ({
+                value: m.id,
+                label: m.name,
+                sublabel: `${m.memberCode} · ${m.email}`,
+              }))}
+            />
           </Field>
 
           <Field
@@ -121,8 +124,8 @@ export function RecordPaymentDialog({
               id="membershipId"
               name="membershipId"
               disabled={!memberId || loadingMemberships}
-              defaultValue={defaultMembershipId ?? ""}
-              key={memberId}
+              value={membershipId}
+              onChange={(e) => setMembershipId(e.target.value)}
             >
               <option value="">No specific membership</option>
               {memberships.map((m) => (
@@ -134,13 +137,21 @@ export function RecordPaymentDialog({
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Amount" htmlFor="amount" required error={state.fieldErrors?.amount}>
+            <Field
+              label="Amount"
+              htmlFor="amount"
+              required
+              hint={selectedMembership ? "Defaults to the membership's amount." : undefined}
+              error={state.fieldErrors?.amount}
+            >
               <Input
+                key={membershipId}
                 id="amount"
                 name="amount"
                 type="number"
                 min="0"
                 step="0.01"
+                defaultValue={selectedMembership ? selectedMembership.amount.toFixed(2) : ""}
                 invalid={!!state.fieldErrors?.amount}
               />
             </Field>

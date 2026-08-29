@@ -1,6 +1,7 @@
 import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/dal";
+import { getCurrency } from "@/lib/settings";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PlanFormDialog } from "./plan-form-dialog";
@@ -20,9 +21,12 @@ export default async function MembershipPlansPage() {
   const user = await requireRole("ADMIN", "RECEPTIONIST", "TRAINER");
   const isAdmin = user.role === "ADMIN";
 
-  const plans = await prisma.membershipPlan.findMany({
-    orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
-  });
+  const [plans, currency] = await Promise.all([
+    prisma.membershipPlan.findMany({
+      orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
+    }),
+    getCurrency(),
+  ]);
 
   const membershipCounts = new Map<string, number>();
   if (isAdmin && plans.length > 0) {
@@ -73,6 +77,7 @@ export default async function MembershipPlansPage() {
               }}
               isAdmin={isAdmin}
               hasMemberships={(membershipCounts.get(plan.id) ?? 0) > 0}
+              currency={currency}
             />
           ))}
         </div>

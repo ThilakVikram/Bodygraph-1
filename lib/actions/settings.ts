@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/dal";
 import { writeAuditLog } from "@/lib/audit";
 import { branchSchema } from "@/lib/validations/branch";
+import { currencySettingSchema } from "@/lib/validations/settings";
 import type { ActionState } from "./types";
 
 function parseInput(formData: FormData) {
@@ -120,4 +121,36 @@ export async function toggleBranchActiveAction(
     success: true,
     message: updated.isActive ? "Branch activated." : "Branch deactivated.",
   };
+}
+
+export async function updateCurrencyAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireRole("ADMIN");
+
+  const parsed = currencySettingSchema.safeParse({
+    currency: formData.get("currency"),
+  });
+  if (!parsed.success) {
+    return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  await prisma.appSetting.upsert({
+    where: { id: "app" },
+    create: { id: "app", currency: parsed.data.currency },
+    update: { currency: parsed.data.currency },
+  });
+
+  await writeAuditLog({
+    userId: user.id,
+    action: "UPDATE",
+    entity: "AppSetting",
+    entityId: "app",
+    metadata: { field: "currency", value: parsed.data.currency },
+  });
+
+  revalidatePath("/", "layout");
+
+  return { success: true, message: "Currency updated." };
 }

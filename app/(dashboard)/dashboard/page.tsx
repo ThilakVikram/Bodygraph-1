@@ -7,7 +7,7 @@ import { MemberDashboard } from "./member-dashboard";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/api/auth/clear-session");
 
   switch (user.role) {
     case "ADMIN":
@@ -19,6 +19,6 @@ export default async function DashboardPage() {
     case "MEMBER":
       return <MemberDashboard userId={user.id} userName={user.name} />;
     default:
-      redirect("/login");
+      redirect("/api/auth/clear-session");
   }
 }

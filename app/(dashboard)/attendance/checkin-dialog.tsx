@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { UserPlus } from "lucide-react";
 import { manualCheckInAction } from "@/lib/actions/attendance";
 import { initialActionState } from "@/lib/actions/types";
@@ -8,7 +8,7 @@ import { useActionToast } from "@/hooks/use-action-toast";
 import { Dialog, type DialogHandle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { Select } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 
 type MemberOption = {
   id: string;
@@ -21,6 +21,7 @@ export function CheckInDialog({ members }: { members: MemberOption[] }) {
   const dialogRef = useRef<DialogHandle>(null);
   const [state, formAction, pending] = useActionState(manualCheckInAction, initialActionState);
   useActionToast(state);
+  const [memberId, setMemberId] = useState("");
 
   useEffect(() => {
     if (state.success) {
@@ -40,23 +41,18 @@ export function CheckInDialog({ members }: { members: MemberOption[] }) {
       >
         <form action={formAction} className="space-y-4">
           <Field label="Member" htmlFor="memberId" required error={state.fieldErrors?.memberId}>
-            <Select
-              id="memberId"
+            <Combobox
               name="memberId"
-              defaultValue=""
-              required
+              value={memberId}
+              onChange={setMemberId}
+              placeholder="Search by name or member code…"
               invalid={!!state.fieldErrors?.memberId}
-            >
-              <option value="" disabled>
-                Select a member
-              </option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.memberCode} — {m.name}
-                  {m.status === "INACTIVE" ? " (Inactive)" : ""}
-                </option>
-              ))}
-            </Select>
+              options={members.map((m) => ({
+                value: m.id,
+                label: m.name,
+                sublabel: m.memberCode + (m.status === "INACTIVE" ? " · Inactive" : ""),
+              }))}
+            />
           </Field>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => dialogRef.current?.close()}>

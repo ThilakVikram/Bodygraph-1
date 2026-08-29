@@ -20,17 +20,25 @@ export const getCurrentUser = cache(async () => {
   return session.user;
 });
 
-/** Redirects to /login when there is no authenticated user. */
+/**
+ * Redirects to /login when there is no authenticated user. Routes through
+ * /api/auth/clear-session (not directly to /login) so a stale/invalid
+ * session cookie gets cleared — otherwise proxy.ts's cookie-presence check
+ * bounces the request straight back here, looping forever.
+ */
 export async function requireUser() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/api/auth/clear-session");
   return user;
 }
 
-/** Redirects to /login when unauthenticated, /forbidden when the role doesn't match. */
+/**
+ * Redirects to /login when unauthenticated, /forbidden when the role doesn't
+ * match. A user with isAdmin=true always passes, regardless of role.
+ */
 export async function requireRole(...roles: Role[]) {
   const user = await requireUser();
-  if (!roles.includes(user.role as Role)) {
+  if (!user.isAdmin && !roles.includes(user.role as Role)) {
     redirect("/forbidden");
   }
   return user;

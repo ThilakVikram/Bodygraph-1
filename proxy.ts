@@ -8,7 +8,7 @@ import { SESSION_COOKIE_NAME } from "@/lib/auth/constants";
 // server-side in lib/auth/dal.ts (requireUser/requireRole) on every
 // layout/page/action. This only improves UX by avoiding an obviously
 // unnecessary render of a protected page for a signed-out visitor.
-const PUBLIC_PATHS = ["/login", "/forgot-password", "/reset-password"];
+const PUBLIC_PATHS = ["/login"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
