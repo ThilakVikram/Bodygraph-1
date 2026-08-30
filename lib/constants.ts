@@ -41,7 +41,7 @@ export const PAYMENT_STATUSES = [
   "REFUNDED",
 ] as const;
 
-export const ATTENDANCE_METHODS = ["QR", "MANUAL"] as const;
+export const ATTENDANCE_METHODS = ["QR", "MANUAL", "KIOSK"] as const;
 
 export const WORKOUT_STATUSES = ["ACTIVE", "COMPLETED", "CANCELLED"] as const;
 

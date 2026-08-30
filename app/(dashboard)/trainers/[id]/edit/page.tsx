@@ -26,6 +26,7 @@ export default async function EditTrainerPage({
         trainerId={trainer.id}
         defaultValues={{
           name: trainer.user.name,
+          username: trainer.user.username,
           email: trainer.user.email,
           phone: trainer.user.phone,
           specialization: trainer.specialization,

@@ -21,6 +21,8 @@ export async function createStaffUserAction(
 
   const parsed = createStaffUserSchema.safeParse({
     name: formData.get("name"),
+    username: formData.get("username"),
+    phone: formData.get("phone"),
     email: formData.get("email"),
     role: formData.get("role"),
   });
@@ -28,9 +30,20 @@ export async function createStaffUserAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } });
-  if (existing) {
-    return { fieldErrors: { email: ["A user with this email already exists"] } };
+  const email = parsed.data.email || undefined;
+  const [usernameOwner, phoneOwner, emailOwner] = await Promise.all([
+    prisma.user.findUnique({ where: { username: parsed.data.username } }),
+    prisma.user.findUnique({ where: { phone: parsed.data.phone } }),
+    email ? prisma.user.findUnique({ where: { email } }) : Promise.resolve(null),
+  ]);
+  if (usernameOwner) {
+    return { fieldErrors: { username: ["This username is already taken."] } };
+  }
+  if (phoneOwner) {
+    return { fieldErrors: { phone: ["A user with this phone number already exists."] } };
+  }
+  if (emailOwner) {
+    return { fieldErrors: { email: ["A user with this email already exists."] } };
   }
 
   const tempPassword = generateTempPassword();
@@ -38,7 +51,9 @@ export async function createStaffUserAction(
   const user = await prisma.user.create({
     data: {
       name: parsed.data.name,
-      email: parsed.data.email,
+      username: parsed.data.username,
+      phone: parsed.data.phone,
+      email,
       role: parsed.data.role,
       passwordHash: hashPassword(tempPassword),
       mustChangePassword: true,
@@ -51,7 +66,7 @@ export async function createStaffUserAction(
     action: "CREATE",
     entity: "User",
     entityId: user.id,
-    metadata: { name: user.name, email: user.email, role: user.role },
+    metadata: { name: user.name, username: user.username, role: user.role },
   });
 
   revalidatePath("/users");
@@ -59,7 +74,7 @@ export async function createStaffUserAction(
   return {
     success: true,
     message: "Staff user created.",
-    data: { userId: user.id, name: user.name, email: user.email, tempPassword },
+    data: { userId: user.id, name: user.name, username: user.username, tempPassword },
   };
 }
 
@@ -78,6 +93,7 @@ export async function updateUserAction(
   const rawRole = formData.get("role");
   const parsed = updateUserSchema.safeParse({
     name: formData.get("name"),
+    username: formData.get("username"),
     phone: formData.get("phone"),
     isActive: formData.get("isActive") === "on" || formData.get("isActive") === "true",
     role: rawRole ? String(rawRole) : undefined,
@@ -98,11 +114,23 @@ export async function updateUserAction(
     return { error: "You can't deactivate your own account." };
   }
 
+  const [usernameOwner, phoneOwner] = await Promise.all([
+    prisma.user.findUnique({ where: { username: parsed.data.username } }),
+    prisma.user.findUnique({ where: { phone: parsed.data.phone } }),
+  ]);
+  if (usernameOwner && usernameOwner.id !== id) {
+    return { fieldErrors: { username: ["This username is already taken."] } };
+  }
+  if (phoneOwner && phoneOwner.id !== id) {
+    return { fieldErrors: { phone: ["A user with this phone number already exists."] } };
+  }
+
   const updated = await prisma.user.update({
     where: { id },
     data: {
       name: parsed.data.name,
-      phone: parsed.data.phone || null,
+      username: parsed.data.username,
+      phone: parsed.data.phone,
       isActive: parsed.data.isActive,
       role: nextRole,
     },

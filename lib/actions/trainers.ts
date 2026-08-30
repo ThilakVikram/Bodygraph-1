@@ -14,6 +14,7 @@ import type { ActionState } from "./types";
 function parseTrainerForm(formData: FormData) {
   return trainerInputSchema.safeParse({
     name: formData.get("name"),
+    username: formData.get("username"),
     email: formData.get("email"),
     phone: formData.get("phone"),
     specialization: formData.get("specialization"),
@@ -41,10 +42,20 @@ export async function createTrainerAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
   const data = parsed.data;
-  const email = data.email.toLowerCase();
+  const email = data.email || undefined;
 
-  const existingUser = await prisma.user.findUnique({ where: { email } });
-  if (existingUser) {
+  const [usernameOwner, phoneOwner, emailOwner] = await Promise.all([
+    prisma.user.findUnique({ where: { username: data.username } }),
+    prisma.user.findUnique({ where: { phone: data.phone } }),
+    email ? prisma.user.findUnique({ where: { email } }) : Promise.resolve(null),
+  ]);
+  if (usernameOwner) {
+    return { fieldErrors: { username: ["This username is already taken."] } };
+  }
+  if (phoneOwner) {
+    return { fieldErrors: { phone: ["A user with this phone number already exists."] } };
+  }
+  if (emailOwner) {
     return { fieldErrors: { email: ["A user with this email already exists."] } };
   }
 
@@ -56,11 +67,12 @@ export async function createTrainerAction(
   const trainer = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
+        username: data.username,
         email,
         passwordHash: hashPassword(tempPassword),
         role: "TRAINER",
         name: data.name,
-        phone: data.phone || null,
+        phone: data.phone,
         mustChangePassword: true,
       },
     });
@@ -82,18 +94,20 @@ export async function createTrainerAction(
     entityId: trainer.id,
   });
 
-  await sendEmail({
-    to: email,
-    subject: "Your Bodygraph Manager account",
-    body: `Welcome, ${data.name}!\n\nYour temporary password is: ${tempPassword}\nPlease log in and change it as soon as possible.`,
-  });
+  if (email) {
+    await sendEmail({
+      to: email,
+      subject: "Your Bodygraph Manager account",
+      body: `Welcome, ${data.name}!\n\nYour username is: ${data.username}\nYour temporary password is: ${tempPassword}\nPlease log in and change it as soon as possible.`,
+    });
+  }
 
   revalidatePath("/trainers");
 
   return {
     success: true,
     message: `Trainer ${data.name} created successfully.`,
-    data: { tempPassword, trainerId: trainer.id },
+    data: { tempPassword, trainerId: trainer.id, username: data.username },
   };
 }
 
@@ -114,9 +128,19 @@ export async function updateTrainerAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
   const data = parsed.data;
-  const email = data.email.toLowerCase();
+  const email = data.email || undefined;
 
-  const emailOwner = await prisma.user.findUnique({ where: { email } });
+  const [usernameOwner, phoneOwner, emailOwner] = await Promise.all([
+    prisma.user.findUnique({ where: { username: data.username } }),
+    prisma.user.findUnique({ where: { phone: data.phone } }),
+    email ? prisma.user.findUnique({ where: { email } }) : Promise.resolve(null),
+  ]);
+  if (usernameOwner && usernameOwner.id !== existing.userId) {
+    return { fieldErrors: { username: ["This username is already taken."] } };
+  }
+  if (phoneOwner && phoneOwner.id !== existing.userId) {
+    return { fieldErrors: { phone: ["A user with this phone number already exists."] } };
+  }
   if (emailOwner && emailOwner.id !== existing.userId) {
     return { fieldErrors: { email: ["A user with this email already exists."] } };
   }
@@ -127,7 +151,7 @@ export async function updateTrainerAction(
   await prisma.$transaction([
     prisma.user.update({
       where: { id: existing.userId },
-      data: { name: data.name, email, phone: data.phone || null },
+      data: { name: data.name, username: data.username, email: email ?? null, phone: data.phone },
     }),
     prisma.trainer.update({
       where: { id: trainerId },

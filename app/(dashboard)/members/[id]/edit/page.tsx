@@ -31,6 +31,7 @@ export default async function EditMemberPage({
         memberId={member.id}
         defaultValues={{
           name: member.user.name,
+          username: member.user.username,
           email: member.user.email,
           phone: member.user.phone,
           dateOfBirth: member.dateOfBirth ? member.dateOfBirth.toISOString().slice(0, 10) : "",

@@ -11,12 +11,14 @@ import { Button } from "@/components/ui/button";
 
 export function AccountForms({
   name,
+  username,
   email,
   phone,
 }: {
   name: string;
-  email: string;
-  phone: string | null;
+  username: string;
+  email: string | null;
+  phone: string;
 }) {
   const [profileState, profileAction, profilePending] = useActionState(
     updateProfileAction,
@@ -38,14 +40,19 @@ export function AccountForms({
             <CardDescription>Your basic account information.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Field label="Email" htmlFor="email-display">
-              <Input id="email-display" value={email} disabled />
+            <Field label="Username" htmlFor="username-display">
+              <Input id="username-display" value={username} disabled />
             </Field>
+            {email && (
+              <Field label="Email" htmlFor="email-display">
+                <Input id="email-display" value={email} disabled />
+              </Field>
+            )}
             <Field label="Full name" htmlFor="name" required error={profileState.fieldErrors?.name}>
               <Input id="name" name="name" defaultValue={name} invalid={!!profileState.fieldErrors?.name} />
             </Field>
-            <Field label="Phone" htmlFor="phone" error={profileState.fieldErrors?.phone}>
-              <Input id="phone" name="phone" defaultValue={phone ?? ""} invalid={!!profileState.fieldErrors?.phone} />
+            <Field label="Phone" htmlFor="phone" required error={profileState.fieldErrors?.phone}>
+              <Input id="phone" name="phone" defaultValue={phone} invalid={!!profileState.fieldErrors?.phone} />
             </Field>
           </CardContent>
           <CardFooter className="justify-end">

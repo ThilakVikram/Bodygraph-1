@@ -105,7 +105,9 @@ export default async function TrainersPage({
                     <Avatar name={trainer.user.name} src={trainer.user.avatarUrl} size={32} />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-foreground">{trainer.user.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">{trainer.user.email}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {trainer.user.email ?? `@${trainer.user.username}`}
+                      </p>
                     </div>
                   </Link>
                 </TableCell>

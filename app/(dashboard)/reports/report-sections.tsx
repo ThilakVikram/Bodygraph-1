@@ -248,7 +248,7 @@ export function MembersSection({
                 {rows.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell>{m.user.name}</TableCell>
-                    <TableCell>{m.user.email}</TableCell>
+                    <TableCell>{m.user.email ?? "—"}</TableCell>
                     <TableCell>{m.branch?.name ?? "—"}</TableCell>
                     <TableCell>
                       <StatusBadge status={m.status} />

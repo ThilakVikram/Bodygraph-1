@@ -65,7 +65,9 @@ export default async function ReceiptPage({
               Billed to
             </p>
             <p className="mt-1 font-medium text-foreground">{payment.member.user.name}</p>
-            <p className="text-sm text-muted-foreground">{payment.member.user.email}</p>
+            <p className="text-sm text-muted-foreground">
+              {payment.member.user.email ?? `@${payment.member.user.username}`}
+            </p>
             <p className="text-sm text-muted-foreground">
               Member code: {payment.member.memberCode}
             </p>

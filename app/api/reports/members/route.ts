@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     ["Name", "Email", "Branch", "Status", "Join Date"],
     rows.map((m) => [
       m.user.name,
-      m.user.email,
+      m.user.email ?? "",
       m.branch?.name ?? "",
       titleCase(m.status),
       formatDate(m.joinDate),

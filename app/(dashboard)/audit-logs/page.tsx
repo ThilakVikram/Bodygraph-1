@@ -68,7 +68,7 @@ export default async function AuditLogsPage({
     prisma.auditLog.count({ where }),
     prisma.auditLog.findMany({
       where,
-      include: { user: { select: { name: true, email: true } } },
+      include: { user: { select: { name: true, username: true, email: true } } },
       orderBy: { createdAt: "desc" },
       skip,
       take,
@@ -112,7 +112,9 @@ export default async function AuditLogsPage({
                   {log.user ? (
                     <div className="min-w-0">
                       <p className="truncate font-medium">{log.user.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">{log.user.email}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {log.user.email ?? `@${log.user.username}`}
+                      </p>
                     </div>
                   ) : (
                     <span className="text-muted-foreground">System</span>

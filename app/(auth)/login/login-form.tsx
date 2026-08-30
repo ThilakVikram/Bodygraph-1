@@ -33,14 +33,18 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
               {state.error}
             </p>
           )}
-          <Field label="Email" htmlFor="email" required error={state.fieldErrors?.email}>
+          <Field
+            label="Username or Phone Number"
+            htmlFor="identifier"
+            required
+            error={state.fieldErrors?.identifier}
+          >
             <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              invalid={!!state.fieldErrors?.email}
+              id="identifier"
+              name="identifier"
+              autoComplete="username"
+              placeholder="Username or phone number"
+              invalid={!!state.fieldErrors?.identifier}
             />
           </Field>
           <Field
@@ -63,15 +67,6 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           </Button>
         </form>
 
-        {process.env.NODE_ENV !== "production" && (
-          <div className="mt-4 rounded-lg border border-border bg-muted/50 p-3 text-xs text-muted-foreground">
-            <p className="mb-1 font-medium text-foreground">Demo accounts (dev only)</p>
-            <p>admin@bodygraph.dev / Admin@123</p>
-            <p>reception@bodygraph.dev / Reception@123</p>
-            <p>trainer@bodygraph.dev / Trainer@123</p>
-            <p>member@bodygraph.dev / Member@123</p>
-          </div>
-        )}
       </div>
     </div>
   );

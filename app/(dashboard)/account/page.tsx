@@ -10,6 +10,7 @@ export default async function AccountPage() {
       <PageHeader title="Account" description="Manage your profile and password." />
       <AccountForms
         name={user.name}
+        username={user.username}
         email={user.email}
         phone={user.phone}
       />

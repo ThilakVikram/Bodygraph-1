@@ -14,19 +14,22 @@ export async function loginAction(
   formData: FormData,
 ): Promise<ActionState> {
   const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
+    identifier: formData.get("identifier"),
     password: formData.get("password"),
   });
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: parsed.data.email.toLowerCase() },
+  const identifier = parsed.data.identifier.trim();
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [{ username: identifier.toLowerCase() }, { phone: identifier }],
+    },
   });
 
   if (!user || !user.isActive || !verifyPassword(parsed.data.password, user.passwordHash)) {
-    return { error: "Invalid email or password." };
+    return { error: "Invalid username/phone number or password." };
   }
 
   await createSession(user.id);
@@ -118,9 +121,14 @@ export async function updateProfileAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
+  const phoneOwner = await prisma.user.findUnique({ where: { phone: parsed.data.phone } });
+  if (phoneOwner && phoneOwner.id !== user.id) {
+    return { fieldErrors: { phone: ["A user with this phone number already exists."] } };
+  }
+
   await prisma.user.update({
     where: { id: user.id },
-    data: { name: parsed.data.name, phone: parsed.data.phone || null },
+    data: { name: parsed.data.name, phone: parsed.data.phone },
   });
   await writeAuditLog({
     userId: user.id,

@@ -136,7 +136,9 @@ export default async function MembersPage({
                     <Avatar name={member.user.name} src={member.user.avatarUrl ?? member.photoUrl} size={32} />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-foreground">{member.user.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">{member.user.email}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {member.user.email ?? `@${member.user.username}`}
+                      </p>
                     </div>
                   </Link>
                 </TableCell>

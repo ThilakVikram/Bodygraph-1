@@ -45,6 +45,12 @@ export function TrainerFormDialog({ branches }: { branches: Option[] }) {
             </p>
             <div className="space-y-2 rounded-lg border border-border bg-muted/40 p-3 text-sm">
               <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Username</span>
+                <span className="font-mono font-medium text-foreground">
+                  {String(state.data?.username ?? "")}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">Temporary password</span>
                 <span className="font-mono font-medium text-foreground">
                   {String(state.data?.tempPassword ?? "")}

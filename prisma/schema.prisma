@@ -19,12 +19,13 @@ datasource db {
 /// role: ADMIN | RECEPTIONIST | TRAINER | MEMBER
 model User {
   id                 String    @id @default(cuid())
-  email              String    @unique
+  username           String    @unique
+  email              String?   @unique
+  phone              String    @unique
   passwordHash       String
   role               String
   isAdmin            Boolean   @default(false)
   name               String
-  phone              String?
   avatarUrl          String?
   isActive           Boolean   @default(true)
   mustChangePassword Boolean   @default(false)
@@ -185,15 +186,16 @@ model Membership {
   @@index([endDate])
 }
 
-/// method: QR | MANUAL
+/// method: QR | MANUAL | KIOSK
 model Attendance {
-  id         String    @id @default(cuid())
-  memberId   String
-  checkIn    DateTime  @default(now())
-  checkOut   DateTime?
-  method     String    @default("MANUAL")
-  markedById String?
-  createdAt  DateTime  @default(now())
+  id              String    @id @default(cuid())
+  memberId        String
+  checkIn         DateTime  @default(now())
+  checkOut        DateTime?
+  checkOutUnknown Boolean   @default(false)
+  method          String    @default("MANUAL")
+  markedById      String?
+  createdAt       DateTime  @default(now())
 
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
   markedBy User?  @relation("AttendanceMarkedBy", fields: [markedById], references: [id])

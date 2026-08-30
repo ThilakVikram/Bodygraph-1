@@ -17,7 +17,7 @@ import { formatDate, titleCase } from "@/lib/utils";
 export type MemberOption = {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   memberCode: string;
 };
 
@@ -109,7 +109,7 @@ export function RecordPaymentDialog({
               options={members.map((m) => ({
                 value: m.id,
                 label: m.name,
-                sublabel: `${m.memberCode} · ${m.email}`,
+                sublabel: m.email ? `${m.memberCode} · ${m.email}` : m.memberCode,
               }))}
             />
           </Field>

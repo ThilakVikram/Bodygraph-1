@@ -89,7 +89,7 @@ export default async function MemberDetailPage({
           )}
           <div>
             <p className="text-base font-semibold text-foreground">{member.user.name}</p>
-            <p className="text-sm text-muted-foreground">{member.user.email}</p>
+            <p className="text-sm text-muted-foreground">{member.user.email ?? `@${member.user.username}`}</p>
           </div>
           <StatusBadge status={member.status} />
           <div className="w-full space-y-2 border-t border-border pt-4 text-left text-sm">

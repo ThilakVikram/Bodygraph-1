@@ -41,7 +41,14 @@ export default async function UsersPage({
     ...(role ? { role } : {}),
     ...(status === "active" ? { isActive: true } : status === "inactive" ? { isActive: false } : {}),
     ...(search
-      ? { OR: [{ name: { contains: search } }, { email: { contains: search } }] }
+      ? {
+          OR: [
+            { name: { contains: search } },
+            { username: { contains: search } },
+            { email: { contains: search } },
+            { phone: { contains: search } },
+          ],
+        }
       : {}),
   };
 
@@ -101,7 +108,10 @@ export default async function UsersPage({
                           <span className="ml-1.5 text-xs font-normal text-muted-foreground">(you)</span>
                         )}
                       </p>
-                      <p className="truncate text-xs text-muted-foreground">{u.email}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        @{u.username}
+                        {u.email ? ` · ${u.email}` : ""}
+                      </p>
                     </div>
                   </div>
                 </TableCell>
@@ -120,6 +130,7 @@ export default async function UsersPage({
                     user={{
                       id: u.id,
                       name: u.name,
+                      username: u.username,
                       phone: u.phone,
                       role: u.role,
                       isActive: u.isActive,

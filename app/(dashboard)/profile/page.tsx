@@ -27,7 +27,7 @@ export default async function ProfilePage() {
             <Avatar name={user.name} src={user.avatarUrl} size={80} />
             <div>
               <p className="text-base font-semibold text-foreground">{user.name}</p>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="text-sm text-muted-foreground">{user.email ?? `@${user.username}`}</p>
             </div>
             <StatusBadge status={member.status} />
             <div className="w-full space-y-2 border-t border-border pt-4 text-left text-sm">

@@ -18,7 +18,8 @@ import { Label } from "@/components/ui/label";
 export type EditableUser = {
   id: string;
   name: string;
-  phone: string | null;
+  username: string;
+  phone: string;
   role: string;
   isActive: boolean;
 };
@@ -56,8 +57,17 @@ export const EditUserDialog = forwardRef<EditUserDialogHandle, { user: EditableU
             <Input id="edit-name" name="name" defaultValue={user.name} invalid={!!state.fieldErrors?.name} />
           </Field>
 
-          <Field label="Phone" htmlFor="edit-phone" error={state.fieldErrors?.phone}>
-            <Input id="edit-phone" name="phone" defaultValue={user.phone ?? ""} invalid={!!state.fieldErrors?.phone} />
+          <Field label="Username" htmlFor="edit-username" required error={state.fieldErrors?.username}>
+            <Input
+              id="edit-username"
+              name="username"
+              defaultValue={user.username}
+              invalid={!!state.fieldErrors?.username}
+            />
+          </Field>
+
+          <Field label="Phone" htmlFor="edit-phone" required error={state.fieldErrors?.phone}>
+            <Input id="edit-phone" name="phone" defaultValue={user.phone} invalid={!!state.fieldErrors?.phone} />
           </Field>
 
           {canEditRole ? (

@@ -7,7 +7,8 @@ export type Option = { id: string; label: string };
 
 export type MemberFormDefaults = {
   name?: string;
-  email?: string;
+  username?: string;
+  email?: string | null;
   phone?: string | null;
   dateOfBirth?: string;
   gender?: string | null;
@@ -40,21 +41,35 @@ export function MemberFormFields({
             invalid={!!fieldErrors?.name}
           />
         </Field>
-        <Field label="Email" htmlFor="email" required error={fieldErrors?.email}>
+        <Field
+          label="Username"
+          htmlFor="username"
+          required
+          hint="Lowercase letters, numbers, dots, underscores and hyphens."
+          error={fieldErrors?.username}
+        >
           <Input
-            id="email"
-            name="email"
-            type="email"
-            defaultValue={defaultValues?.email}
-            invalid={!!fieldErrors?.email}
+            id="username"
+            name="username"
+            defaultValue={defaultValues?.username}
+            invalid={!!fieldErrors?.username}
           />
         </Field>
-        <Field label="Phone" htmlFor="phone" error={fieldErrors?.phone}>
+        <Field label="Phone" htmlFor="phone" required error={fieldErrors?.phone}>
           <Input
             id="phone"
             name="phone"
             defaultValue={defaultValues?.phone ?? ""}
             invalid={!!fieldErrors?.phone}
+          />
+        </Field>
+        <Field label="Email" htmlFor="email" hint="Optional" error={fieldErrors?.email}>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            defaultValue={defaultValues?.email ?? ""}
+            invalid={!!fieldErrors?.email}
           />
         </Field>
         <Field label="Date of birth" htmlFor="dateOfBirth" error={fieldErrors?.dateOfBirth}>

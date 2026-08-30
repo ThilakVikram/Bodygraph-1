@@ -11,3 +11,7 @@ export const checkOutSchema = z.object({
 export const qrCheckInSchema = z.object({
   qrToken: z.string().trim().min(1, "Scan or enter a QR code"),
 });
+
+export const kioskLookupSchema = z.object({
+  identifier: z.string().trim().min(1, "Enter your username, phone number, or member ID"),
+});

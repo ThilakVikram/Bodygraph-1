@@ -55,7 +55,7 @@ export default async function TrainerDetailPage({
             <Avatar name={trainer.user.name} src={trainer.user.avatarUrl} size={96} />
             <div>
               <p className="text-base font-semibold text-foreground">{trainer.user.name}</p>
-              <p className="text-sm text-muted-foreground">{trainer.user.email}</p>
+              <p className="text-sm text-muted-foreground">{trainer.user.email ?? `@${trainer.user.username}`}</p>
             </div>
             <StatusBadge status={trainer.isActive ? "ACTIVE" : "INACTIVE"} />
             <div className="w-full space-y-2 border-t border-border pt-4 text-left text-sm">

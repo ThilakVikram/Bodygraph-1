@@ -7,7 +7,6 @@ import { requireRole } from "@/lib/auth/dal";
 import { hashPassword } from "@/lib/auth/password";
 import { generateTempPassword } from "@/lib/auth/generate-password";
 import { generateQrToken } from "@/lib/qr";
-import { generateMemberCode } from "@/lib/utils";
 import { saveUploadedImage, deleteUploadedFile, UploadError } from "@/lib/upload";
 import { writeAuditLog } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
@@ -17,6 +16,7 @@ import type { ActionState } from "./types";
 function parseMemberForm(formData: FormData) {
   return memberInputSchema.safeParse({
     name: formData.get("name"),
+    username: formData.get("username"),
     email: formData.get("email"),
     phone: formData.get("phone"),
     dateOfBirth: formData.get("dateOfBirth"),
@@ -29,16 +29,22 @@ function parseMemberForm(formData: FormData) {
   });
 }
 
+/** Sequential "MEM-1", "MEM-2", … — starts at 1, continues past whatever the highest existing number is. */
 async function generateUniqueMemberCode(): Promise<string> {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const code = generateMemberCode();
+  const members = await prisma.member.findMany({ select: { memberCode: true } });
+  const maxNumber = members.reduce((max, m) => {
+    const match = m.memberCode.match(/^MEM-(\d+)$/);
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+
+  for (let next = maxNumber + 1; ; next++) {
+    const code = `MEM-${next}`;
     const existing = await prisma.member.findUnique({
       where: { memberCode: code },
       select: { id: true },
     });
     if (!existing) return code;
   }
-  return generateMemberCode();
 }
 
 /** Validates optional branch/trainer references; returns a fieldErrors ActionState on failure, or null if valid. */
@@ -68,10 +74,20 @@ export async function createMemberAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
   const data = parsed.data;
-  const email = data.email.toLowerCase();
+  const email = data.email || undefined;
 
-  const existingUser = await prisma.user.findUnique({ where: { email } });
-  if (existingUser) {
+  const [usernameOwner, phoneOwner, emailOwner] = await Promise.all([
+    prisma.user.findUnique({ where: { username: data.username } }),
+    prisma.user.findUnique({ where: { phone: data.phone } }),
+    email ? prisma.user.findUnique({ where: { email } }) : Promise.resolve(null),
+  ]);
+  if (usernameOwner) {
+    return { fieldErrors: { username: ["This username is already taken."] } };
+  }
+  if (phoneOwner) {
+    return { fieldErrors: { phone: ["A user with this phone number already exists."] } };
+  }
+  if (emailOwner) {
     return { fieldErrors: { email: ["A user with this email already exists."] } };
   }
 
@@ -85,11 +101,12 @@ export async function createMemberAction(
   const member = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
+        username: data.username,
         email,
         passwordHash: hashPassword(tempPassword),
         role: "MEMBER",
         name: data.name,
-        phone: data.phone || null,
+        phone: data.phone,
         mustChangePassword: true,
       },
     });
@@ -131,18 +148,20 @@ export async function createMemberAction(
     metadata: { memberCode },
   });
 
-  await sendEmail({
-    to: email,
-    subject: "Your Bodygraph Manager account",
-    body: `Welcome, ${data.name}!\n\nYour temporary password is: ${tempPassword}\nPlease log in and change it as soon as possible.`,
-  });
+  if (email) {
+    await sendEmail({
+      to: email,
+      subject: "Your Bodygraph Manager account",
+      body: `Welcome, ${data.name}!\n\nYour username is: ${data.username}\nYour temporary password is: ${tempPassword}\nPlease log in and change it as soon as possible.`,
+    });
+  }
 
   revalidatePath("/members");
 
   return {
     success: true,
     message: `Member ${data.name} created successfully.${photoWarning}`,
-    data: { tempPassword, memberId: member.id, memberCode },
+    data: { tempPassword, memberId: member.id, memberCode, username: data.username },
   };
 }
 
@@ -163,9 +182,19 @@ export async function updateMemberAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
   const data = parsed.data;
-  const email = data.email.toLowerCase();
+  const email = data.email || undefined;
 
-  const emailOwner = await prisma.user.findUnique({ where: { email } });
+  const [usernameOwner, phoneOwner, emailOwner] = await Promise.all([
+    prisma.user.findUnique({ where: { username: data.username } }),
+    prisma.user.findUnique({ where: { phone: data.phone } }),
+    email ? prisma.user.findUnique({ where: { email } }) : Promise.resolve(null),
+  ]);
+  if (usernameOwner && usernameOwner.id !== existingMember.userId) {
+    return { fieldErrors: { username: ["This username is already taken."] } };
+  }
+  if (phoneOwner && phoneOwner.id !== existingMember.userId) {
+    return { fieldErrors: { phone: ["A user with this phone number already exists."] } };
+  }
   if (emailOwner && emailOwner.id !== existingMember.userId) {
     return { fieldErrors: { email: ["A user with this email already exists."] } };
   }
@@ -176,7 +205,7 @@ export async function updateMemberAction(
   await prisma.$transaction([
     prisma.user.update({
       where: { id: existingMember.userId },
-      data: { name: data.name, email, phone: data.phone || null },
+      data: { name: data.name, username: data.username, email: email ?? null, phone: data.phone },
     }),
     prisma.member.update({
       where: { id: memberId },

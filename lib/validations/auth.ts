@@ -1,11 +1,7 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email is required")
-    .email("Enter a valid email address"),
+  identifier: z.string().trim().min(1, "Username or phone number is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -22,10 +18,5 @@ export const changePasswordSchema = z
 
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120),
-  phone: z
-    .string()
-    .trim()
-    .max(20)
-    .optional()
-    .or(z.literal("")),
+  phone: z.string().trim().min(1, "Phone number is required").max(20),
 });

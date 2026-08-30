@@ -155,7 +155,9 @@ export default async function MembershipDetailPage({
           <CardContent className="space-y-3">
             <div>
               <p className="text-sm font-medium text-foreground">{membership.member.user.name}</p>
-              <p className="text-xs text-muted-foreground">{membership.member.user.email}</p>
+              <p className="text-xs text-muted-foreground">
+                {membership.member.user.email ?? `@${membership.member.user.username}`}
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="neutral">{membership.member.memberCode}</Badge>

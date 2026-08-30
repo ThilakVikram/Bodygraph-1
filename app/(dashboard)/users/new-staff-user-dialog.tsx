@@ -47,9 +47,9 @@ export function NewStaffUserDialog() {
             </p>
             <div className="space-y-2 rounded-lg border border-border bg-muted/40 p-3 text-sm">
               <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">Email</span>
+                <span className="text-muted-foreground">Username</span>
                 <span className="font-mono font-medium text-foreground">
-                  {String(state.data?.email ?? "")}
+                  {String(state.data?.username ?? "")}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-4">
@@ -70,7 +70,19 @@ export function NewStaffUserDialog() {
             <Field label="Full name" htmlFor="name" required error={state.fieldErrors?.name}>
               <Input id="name" name="name" invalid={!!state.fieldErrors?.name} />
             </Field>
-            <Field label="Email" htmlFor="email" required error={state.fieldErrors?.email}>
+            <Field
+              label="Username"
+              htmlFor="username"
+              required
+              hint="Lowercase letters, numbers, dots, underscores and hyphens."
+              error={state.fieldErrors?.username}
+            >
+              <Input id="username" name="username" invalid={!!state.fieldErrors?.username} />
+            </Field>
+            <Field label="Phone number" htmlFor="phone" required error={state.fieldErrors?.phone}>
+              <Input id="phone" name="phone" invalid={!!state.fieldErrors?.phone} />
+            </Field>
+            <Field label="Email" htmlFor="email" hint="Optional" error={state.fieldErrors?.email}>
               <Input id="email" name="email" type="email" invalid={!!state.fieldErrors?.email} />
             </Field>
             <Field label="Role" htmlFor="role" required error={state.fieldErrors?.role}>

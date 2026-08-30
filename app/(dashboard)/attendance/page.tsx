@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { CalendarCheck, CalendarDays, QrCode, UserCheck } from "lucide-react";
+import { CalendarCheck, CalendarDays, Monitor, QrCode, UserCheck } from "lucide-react";
 import { requireUser, requireMemberProfile, requireTrainerProfile } from "@/lib/auth/dal";
+import { closeStaleOpenAttendances } from "@/lib/actions/attendance";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 import { parsePagination, getParam, type SearchParams } from "@/lib/pagination";
@@ -38,6 +39,7 @@ export default async function AttendancePage({
   searchParams: Promise<SearchParams>;
 }) {
   const user = await requireUser();
+  await closeStaleOpenAttendances();
   const sp = await searchParams;
   const { page, take, skip } = parsePagination(sp);
   const search = getParam(sp, "search")?.trim();
@@ -141,6 +143,14 @@ export default async function AttendancePage({
         actions={
           canManage ? (
             <>
+              <Link
+                href="/kiosk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonVariants("outline", "md")}
+              >
+                <Monitor className="h-4 w-4" /> Open Check-in Kiosk
+              </Link>
               <Link href="/checkin" className={buttonVariants("outline", "md")}>
                 <QrCode className="h-4 w-4" /> Scan QR
               </Link>
@@ -199,15 +209,31 @@ export default async function AttendancePage({
                   </TableCell>
                 )}
                 <TableCell>{formatDateTime(a.checkIn)}</TableCell>
-                <TableCell>{a.checkOut ? formatDateTime(a.checkOut) : "—"}</TableCell>
-                <TableCell>
-                  <Badge variant={a.method === "QR" ? "info" : "neutral"}>{a.method}</Badge>
-                </TableCell>
                 <TableCell>
                   {a.checkOut ? (
-                    <Badge variant="neutral">Checked out</Badge>
+                    a.checkOutUnknown ? (
+                      <span className="text-muted-foreground">Unknown</span>
+                    ) : (
+                      formatDateTime(a.checkOut)
+                    )
                   ) : (
+                    "—"
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={a.method === "QR" ? "info" : a.method === "KIOSK" ? "success" : "neutral"}
+                  >
+                    {a.method}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {!a.checkOut ? (
                     <Badge variant="success">Checked in</Badge>
+                  ) : a.checkOutUnknown ? (
+                    <Badge variant="warning">Checkout unknown</Badge>
+                  ) : (
+                    <Badge variant="neutral">Checked out</Badge>
                   )}
                 </TableCell>
                 {showMemberColumn && <TableCell>{a.markedBy?.name ?? "—"}</TableCell>}

@@ -59,6 +59,12 @@ export function MemberFormDialog({
                 </span>
               </div>
               <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Username</span>
+                <span className="font-mono font-medium text-foreground">
+                  {String(state.data?.username ?? "")}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">Temporary password</span>
                 <span className="font-mono font-medium text-foreground">
                   {String(state.data?.tempPassword ?? "")}

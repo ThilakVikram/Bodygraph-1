@@ -13,7 +13,7 @@ export function Topbar({
   user,
   unreadCount,
 }: {
-  user: { name: string; email: string; role: string; avatarUrl: string | null };
+  user: { name: string; email: string | null; role: string; avatarUrl: string | null };
   unreadCount: number;
 }) {
   const { toggle } = useSidebar();
