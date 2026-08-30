@@ -226,3 +226,54 @@ export async function resetUserPasswordAction(
     data: { tempPassword, email: existing.email, name: existing.name },
   };
 }
+
+export async function deleteUserAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const admin = await requireRole("ADMIN");
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "Missing user id." };
+
+  if (id === admin.id) {
+    return { error: "You can't delete your own account." };
+  }
+
+  const existing = await prisma.user.findUnique({
+    where: { id },
+    include: { trainer: { include: { _count: { select: { workoutPlans: true, dietPlans: true } } } } },
+  });
+  if (!existing) return { error: "User not found." };
+
+  if (existing.trainer) {
+    const planCount = existing.trainer._count.workoutPlans + existing.trainer._count.dietPlans;
+    if (planCount > 0) {
+      return {
+        error:
+          "This trainer has assigned workout/diet plans. Reassign or remove those first, or deactivate the account instead.",
+      };
+    }
+  }
+
+  await writeAuditLog({
+    userId: admin.id,
+    action: "DELETE",
+    entity: "User",
+    entityId: id,
+    metadata: { name: existing.name, username: existing.username, role: existing.role },
+  });
+
+  // Cascades to the user's Member/Trainer profile and everything hanging off
+  // it (memberships, payments, attendance, workout/diet plans, progress
+  // records); historical records recorded/marked by this user elsewhere just
+  // lose that attribution (recordedById/markedById set null) rather than
+  // being deleted.
+  await prisma.user.delete({ where: { id } });
+
+  revalidatePath("/users");
+  revalidatePath("/members");
+  revalidatePath("/trainers");
+
+  return { success: true, message: `${existing.name} has been deleted.` };
+}

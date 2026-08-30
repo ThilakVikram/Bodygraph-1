@@ -2,13 +2,13 @@
 
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Pencil, KeyRound, Ban, RotateCcw } from "lucide-react";
+import { MoreHorizontal, Pencil, KeyRound, Ban, RotateCcw, Trash2 } from "lucide-react";
 import { Menu, MenuItem } from "@/components/ui/menu";
 import { ConfirmDialog, type ConfirmDialogHandle } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast-provider";
 import { initialActionState } from "@/lib/actions/types";
-import { toggleUserActiveAction } from "@/lib/actions/users";
+import { toggleUserActiveAction, deleteUserAction } from "@/lib/actions/users";
 import { EditUserDialog, type EditUserDialogHandle, type EditableUser } from "./edit-user-dialog";
 import { ResetPasswordDialog, type ResetPasswordDialogHandle } from "./reset-password-dialog";
 
@@ -25,11 +25,24 @@ export function UserRowActions({
   const editRef = useRef<EditUserDialogHandle>(null);
   const resetRef = useRef<ResetPasswordDialogHandle>(null);
   const confirmRef = useRef<ConfirmDialogHandle>(null);
+  const deleteConfirmRef = useRef<ConfirmDialogHandle>(null);
 
   async function handleToggleActive() {
     const formData = new FormData();
     formData.set("id", user.id);
     const result = await toggleUserActiveAction(initialActionState, formData);
+    if (result.error) {
+      toast({ title: "Something went wrong", description: result.error, variant: "error" });
+    } else if (result.message) {
+      toast({ title: "Success", description: result.message, variant: "success" });
+      router.refresh();
+    }
+  }
+
+  async function handleDelete() {
+    const formData = new FormData();
+    formData.set("id", user.id);
+    const result = await deleteUserAction(initialActionState, formData);
     if (result.error) {
       toast({ title: "Something went wrong", description: result.error, variant: "error" });
     } else if (result.message) {
@@ -59,6 +72,11 @@ export function UserRowActions({
             {user.isActive ? "Deactivate" : "Reactivate"}
           </MenuItem>
         )}
+        {!isSelf && (
+          <MenuItem destructive onClick={() => deleteConfirmRef.current?.open()}>
+            <Trash2 className="h-4 w-4" /> Delete
+          </MenuItem>
+        )}
       </Menu>
       {/*
         All rendered as siblings of <Menu>, not nested inside it: Menu
@@ -79,6 +97,16 @@ export function UserRowActions({
           confirmLabel={user.isActive ? "Deactivate" : "Reactivate"}
           variant={user.isActive ? "destructive" : "primary"}
           onConfirm={handleToggleActive}
+        />
+      )}
+      {!isSelf && (
+        <ConfirmDialog
+          ref={deleteConfirmRef}
+          title="Delete this user?"
+          description={`This permanently deletes ${user.name}'s account. If they're a member or trainer, this also erases every record tied to their profile — memberships, payments, attendance, workout/diet plans, progress records. This can't be undone. Consider deactivating instead if you just want to block their access.`}
+          confirmLabel="Delete permanently"
+          variant="destructive"
+          onConfirm={handleDelete}
         />
       )}
     </>

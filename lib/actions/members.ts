@@ -276,6 +276,44 @@ export async function reactivateMemberAction(
   return setMemberStatus(formData, "ACTIVE");
 }
 
+export async function deleteMemberAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const actor = await requireRole("ADMIN");
+
+  const memberId = String(formData.get("memberId") ?? "");
+  if (!memberId) return { error: "Missing member id." };
+
+  const member = await prisma.member.findUnique({
+    where: { id: memberId },
+    include: { user: true },
+  });
+  if (!member) return { error: "Member not found." };
+
+  if (member.photoUrl) {
+    await deleteUploadedFile(member.photoUrl).catch(() => {});
+  }
+
+  await writeAuditLog({
+    userId: actor.id,
+    action: "DELETE",
+    entity: "Member",
+    entityId: member.id,
+    metadata: { memberCode: member.memberCode, name: member.user.name },
+  });
+
+  // Deleting the User cascades to this Member profile and everything hanging
+  // off it (memberships, payments, attendance, workout/diet plans, progress
+  // records) — this permanently erases the member's history, unlike
+  // deactivate, which just blocks login and keeps everything on record.
+  await prisma.user.delete({ where: { id: member.userId } });
+
+  revalidatePath("/members");
+
+  return { success: true, message: `${member.user.name} has been deleted.` };
+}
+
 export async function updateMemberPhotoAction(
   _prev: ActionState,
   formData: FormData,

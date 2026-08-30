@@ -151,7 +151,11 @@ export default async function MembersPage({
                 <TableCell>{formatDate(member.joinDate)}</TableCell>
                 {isStaff && (
                   <TableCell className="text-right">
-                    <MemberRowActions memberId={member.id} status={member.status} />
+                    <MemberRowActions
+                      memberId={member.id}
+                      status={member.status}
+                      isAdmin={user.role === "ADMIN"}
+                    />
                   </TableCell>
                 )}
               </TableRow>
