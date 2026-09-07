@@ -47,12 +47,7 @@ A professional gym management web application built with Next.js (App Router), T
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Admin | `admin@bodygraph.dev` | `Admin@123` |
-| Receptionist | `reception@bodygraph.dev` | `Reception@123` |
-| Trainer | `trainer@bodygraph.dev` | `Trainer@123` |
-| Trainer 2 | `trainer2@bodygraph.dev` | `Trainer@123` |
-| Member | `member@bodygraph.dev` | `Member@123` |
-
+| Admin | `admin@bodygraph.in` | `Admin@123` |
 Re-run `npm run db:seed` at any time to reset demo data back to this baseline (it wipes and reseeds all tables).
 
 ## Useful scripts
